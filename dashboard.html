@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редколлегия - Панель управления</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1 id="main-header">Загрузка...</h1>
+                <button id="create-article-btn" class="btn hidden">+ Написать статью</button>
+            </div>
+            <a href="index.html" class="btn-link btn-secondary" style="margin-right: 10px;">На главную</a>
+            <a href="#" class="btn-link btn-secondary" id="logout-btn">Выйти</a>
+        </header>
+        
+        <main id="main-content" class="hidden">
+            
+            <!-- Секция профиля -->
+            <section id="user-stats-section" class="stats-card hidden">
+                <div class="stats-header">
+                    <div class="user-avatar-placeholder" id="user-avatar">👤</div>
+                    <div class="user-info">
+                        <h2 id="stats-username">Загрузка...</h2>
+                        <div class="rank-badge" id="stats-rank">Новичок</div>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-labels">
+                        <span id="progress-text">0 / 1</span>
+                        <span id="next-rank-name">Стажёр</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="rank-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="achievements-wrapper">
+                    <h3>Достижения</h3>
+                    <div class="achievements-grid" id="achievements-grid"></div>
+                </div>
+            </section>
+
+            <!-- Обертка формы -->
+            <div id="form-wrapper">
+                <section id="article-form-section" class="hidden">
+                    <h2 id="form-title">Подать новую статью</h2>
+                    <form id="article-form">
+                        <input type="hidden" id="articleId">
+                        <div class="form-group"><label for="title">Название статьи</label><input type="text" id="title" required></div>
+                        <div class="form-group">
+                            <label for="text">Текст статьи</label>
+                            <textarea id="text" required></textarea>
+                            <button type="button" class="btn-link" id="toggle-text-btn" style="font-size: 0.8rem; margin-top:5px;">Развернуть</button>
+                        </div>
+                        <div class="form-group"><label for="authorName">Имя и Фамилия</label><input type="text" id="authorName" required></div>
+                        <div class="form-group"><label for="authorClass">Класс</label><input type="text" id="authorClass" required></div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn" id="submit-btn">Отправить</button>
+                            <button type="button" class="btn btn-secondary" id="cancel-edit-btn">Отмена</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+
+            <section id="articles-section">
+                <div class="articles-header">
+                    <h2 id="articles-list-header">Статьи</h2>
+                    <div id="sort-controls">
+                        <span>Сортировка:</span>
+                        <button class="btn-toggle" id="sort-by-submission-btn">По дате подачи</button>
+                        <button class="btn-toggle" id="sort-by-publication-btn">По дате выхода</button>
+                    </div>
+                </div>
+                <div id="admin-controls" class="hidden" style="margin-bottom: 20px;">
+                    <button class="btn btn-danger" id="cleanup-btn">🗑 Провести чистку старых статей</button>
+                </div>
+                <div id="articles-container"></div>
+            </section>
+        </main>
+    </div>
+    <div id="user-manager-modal" class="hidden overlay-center">
+        <div class="modal-content">
+            <h3>Управление автором</h3>
+            <h4 id="manage-user-name" style="color: var(--accent-color); margin-bottom: 15px;">User</h4>
+            <input type="hidden" id="manage-user-id">
+            
+            <div class="form-group">
+                <label>Ранг пользователя</label>
+                <select id="manage-rank-select">
+                    <option value="">-- Автоматический расчет --</option>
+                    <option value="Новичок">Новичок</option>
+                    <option value="Стажёр">Стажёр</option>
+                    <option value="Корреспондент">Корреспондент</option>
+                    <option value="Журналист">Журналист</option>
+                    <option value="Спецкор">Спецкор</option>
+                    <option value="Мастер пера">Мастер пера</option>
+                    <option value="Легенда">Легенда</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Дополнительные ачивки (выдать принудительно)</label>
+                <div id="manage-achievements-list" class="checkbox-list">
+                    <!-- Чекбоксы сгенерируются JS -->
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn" id="save-user-stats-btn">Сохранить</button>
+                <button type="button" class="btn btn-secondary" id="close-user-manager-btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+    <div id="notification-container"></div>
+    
+    <div class="loader-overlay" id="loader-overlay">
+        <div class="spinner">
+          <div></div><div></div><div></div><div></div><div></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ru.js"></script>
+    <script type="module" src="dashboard.js"></script>
+</body>
+</html>

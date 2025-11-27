@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - Редколлегия Школяр 2121</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="auth-nav-link">← На главную</a>
+        <section id="auth-section">
+            <form id="login-form">
+                <h2>Вход в аккаунт</h2>
+                <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" required></div>
+                <div class="form-group"><label for="login-password">Пароль</label><input type="password" id="login-password" required></div>
+                <button type="submit" class="btn">Войти</button>
+                <div class="auth-toggle">Нет аккаунта? <a id="show-register-form">Зарегистрироваться</a></div>
+            </form>
+            <form id="register-form" class="hidden">
+                <h2>Создание аккаунта</h2>
+                <div class="form-group"><label for="register-email">Email</label><input type="email" id="register-email" required></div>
+                <div class="form-group"><label for="register-password">Пароль (минимум 6 символов)</label><input type="password" id="register-password" required></div>
+                <button type="submit" class="btn">Создать аккаунт</button>
+                <div class="auth-toggle">Уже есть аккаунт? <a id="show-login-form">Войти</a></div>
+            </form>
+        </section>
+    </div>
+
+    <div id="notification-container"></div>
+    
+    <!-- НОВЫЙ СПИННЕР -->
+    <div class="loader-overlay" id="loader-overlay">
+        <div class="spinner">
+          <div></div><div></div><div></div><div></div><div></div>
+        </div>
+    </div>
+    
+    <script type="module" src="auth.js"></script>
+</body>
+</html>
