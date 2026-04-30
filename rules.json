@@ -1,0 +1,241 @@
+{
+  "rules": {
+    // 2. РОЛИ (АДМИНКА)
+    // Сюда писать через сайт НЕЛЬЗЯ. Роль выдается только вручную владельцем базы.
+    "roles": {
+      ".read": "auth != null",
+      ".write": false
+    },
+
+    // 3. СТАТЬИ
+    "articles": {
+      ".read": true,
+      // Индексируем по автору, чтобы в кабинете быстро находить свои статьи
+      ".indexOn": ["authorId"],
+      
+      "$articleId": {
+        // КТО ИМЕЕТ ПРАВО ПИСАТЬ (СОЗДАВАТЬ/РЕДАКТИРОВАТЬ):
+        // 1. Пользователь должен быть авторизован (auth != null)
+        // 2. И:
+        //    a. Он Админ
+        //    b. ИЛИ данных еще нет (новая статья) И он подписывается своим UID
+        //    c. ИЛИ данные есть (редактирование) И он автор этой статьи
+        ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || (!data.exists() && newData.child('authorId').val() === auth.uid) || (data.exists() && data.child('authorId').val() === auth.uid))",
+        
+        // ОБЯЗАТЕЛЬНЫЕ ПОЛЯ (Валидация структуры)
+        // Статья не сохранится, если в ней нет заголовка, текста или автора.
+        ".validate": "newData.hasChildren(['title', 'text', 'authorId', 'authorName'])",
+        
+        // ПРОВЕРКА ТИПОВ ДАННЫХ
+        "title": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "text": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "authorName": { ".validate": "newData.isString()" },
+        "authorClass": { ".validate": "newData.isString()" },
+        
+        // ID автора должен совпадать с тем, кто пишет (защита от подмены)
+        "authorId": { ".validate": "newData.val() === auth.uid || root.child('roles').child(auth.uid).val() === 'admin'" },
+        
+        // КАРТИНКИ (Поддержка и одиночной, и массива)
+        "images": { ".validate": true }, 
+        "image": { ".validate": true },
+        "createdAt": { ".validate": true },
+
+        // === ЗАЩИТА АДМИНСКИХ ПОЛЕЙ ===
+        // Обычный юзер не может сам опубликовать статью или запретить её удаление.
+        // Он может записать туда только 'false' или 'null'.
+        "isPublished": {
+          ".validate": "newData.val() == false || (data.exists() && data.val() == newData.val()) || root.child('roles').child(auth.uid).val() === 'admin'"
+        },
+        "publishAt": {
+          ".validate": "newData.val() == null || (data.exists() && data.val() == newData.val()) || root.child('roles').child(auth.uid).val() === 'admin'"
+        },
+        "preventDeletion": {
+          ".validate": "newData.val() == false || (data.exists() && data.val() == newData.val()) || root.child('roles').child(auth.uid).val() === 'admin'"
+        },
+        "isRewarded": {
+          ".validate": "newData.val() == false || (data.exists() && data.val() == newData.val()) || root.child('roles').child(auth.uid).val() === 'admin'"
+        },
+        
+        // === ЗАЩИТА ЛАЙКОВ (ЧТОБЫ РАБОТАЛО) ===
+        "likes": {
+           ".write": "auth != null",
+           "$uid": {
+              ".write": "auth.uid === $uid",
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 3"
+           }
+        },
+        "likeCount": {
+           ".write": "auth != null",
+           ".validate": "newData.isNumber() && (!data.exists() || (newData.val() >= data.val() - 3 && newData.val() <= data.val() + 3))"
+        }
+      }
+    },
+
+    "world_event": {
+      ".read": true,
+      // Писать могут только авторизованные
+      ".write": "auth != null",
+  
+      "currentAmount": {
+         // Валидация: число, не меньше 0, не больше 10000 (лимит)
+         ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000"
+      },
+      "isActive": {
+          // Менять статус (вкл/выкл) может только Админ
+          ".write": "root.child('roles').child(auth.uid).val() === 'admin'"
+      }
+    },
+
+    // 4. ПОЛЬЗОВАТЕЛИ
+    "users": {
+      ".read": "root.child('roles').child(auth.uid).val() === 'admin'",
+      ".indexOn": ["email"],
+      "$uid": {
+        // ВМЕСТО СТАРОГО, ВСТАВЬ ВОТ ЭТИ ДВА ПРАВИЛА ЧТЕНИЯ:
+        ".read": "auth != null", 
+        ".write": "auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'admin'",
+    
+        // ДОБАВЬ ЗАЩИТУ EMAIL (Вставь это перед "firstName"):
+        "email": { 
+          ".read": "auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'admin'",
+          ".validate": "newData.isString()" 
+        },
+        
+        // Дополнительные поля профиля (имя, класс, email)
+        "firstName": { ".validate": "newData.isString()" },
+        "lastName": { ".validate": "newData.isString()" },
+        "userClass": { ".validate": "newData.isString()" },
+
+        "lastSeenNews": { ".validate": "newData.isNumber()" },
+
+        "stats": {
+  				".read": "auth != null",
+  				".write": "auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'admin'",
+  				"xp": { ".validate": "newData.isNumber() && (!data.exists() || root.child('roles').child(auth.uid).val() === 'admin' || newData.val() <= data.val())" },
+  				"balance": { ".validate": "newData.isNumber() && (!data.exists() || root.child('roles').child(auth.uid).val() === 'admin' || newData.val() <= data.val())" },
+                "signature": { ".validate": "newData.isNumber() && newData.val() === (newData.parent().child('xp').val() * 7) + (newData.parent().child('balance').val() * 3) + 2121" },
+  				"totalLikes": {
+                    ".write": "auth != null",
+    				".validate": "newData.isNumber() && (!data.exists() || root.child('roles').child(auth.uid).val() === 'admin' || (newData.val() >= data.val() - 3 && newData.val() <= data.val() + 3))"
+  				},
+  				"lastXpGain": { ".validate": "newData.isNumber()" },
+  				"lastUpdated": { ".validate": true }
+				},
+        
+        // ИНВЕНТАРЬ
+        "inventory": { 
+    				".write": "auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'admin'",
+    				// Валидация:
+    				// 1. Это должен быть массив (иметь цифровые ключи)
+    				// 2. Или это null (удаление инвентаря)
+    				".validate": "newData.hasChildren() || newData.val() == null",
+    				"$index": {
+        				// Элемент массива должен быть строкой длиной до 50 символов
+        				// (Защита от того, чтобы друг засовывал туда огромные скрипты или объекты)
+        				".validate": "newData.isString() && newData.val().length < 50"
+    				}
+				},
+        
+        "equipped": {
+            ".write": "auth.uid === $uid",
+
+            "avatar": { 
+                ".validate": "newData.isString() && newData.val().length < 100 || newData.val() == null" 
+            },
+
+            "title": { 
+                ".validate": "newData.isString() && newData.val().length < 50 || newData.val() == null" 
+            },
+            
+            // ДОБАВЛЕНО: Разрешаем поле для ручного статуса Счетовода
+            "title_override": {
+                ".validate": "newData.isString() && newData.val().length < 50 || newData.val() == null"
+            },
+
+            "border": { 
+                ".validate": "newData.isString() && newData.val().length < 50 || newData.val() == null" 
+            },
+            
+            // ДОБАВЛЕНО: Аура тоже должна быть разрешена (иначе она не наденется)
+            "aura": {
+                ".validate": "newData.isString() && newData.val().length < 50 || newData.val() == null"
+            }
+        },
+        
+        // === НАСТАВНИЧЕСТВО (ИСПРАВЛЕНО ДЛЯ КНОПКИ 'ПРИНЯТЬ') ===
+        "mentorship": {
+          // Разрешаем запись, если:
+          // 1. Владелец
+          // 2. Админ
+          // 3. ИЛИ статус меняется на 'pending' (приглашение)
+          ".write": "auth != null && (auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'admin' || newData.child('status').val() === 'pending')",
+          
+          "apprentices": {
+            "$apprenticeId": {
+              // ВАЖНО: В список учеников может писать:
+              // 1. Наставник ($uid)
+              // 2. Ученик ($apprenticeId) - чтобы добавить себя при принятии
+              ".write": "auth.uid === $uid || auth.uid === $apprenticeId"
+            }
+          }
+        },
+        
+        // Данные о сезонах (награды)
+        "season_data": { ".write": "auth.uid === $uid" }
+      }
+    },
+
+    // 5. НАСТРОЙКИ ПОЛЬЗОВАТЕЛЕЙ (Только Админ может менять ранги вручную)
+    "userStats": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "root.child('roles').child(auth.uid).val() === 'admin'"
+      }
+    },
+
+    // 6. ИНКУБАТОР ИДЕЙ
+    "ideas": {
+      ".read": "auth != null",
+      "$ideaId": {
+         // Любой может создать (в т.ч. аноним), изменять/удалять - только Админ
+         ".write": "!data.exists() || (auth != null && root.child('roles').child(auth.uid).val() === 'admin')"
+      }
+    },
+
+    // 7. СЕЗОНЫ (Управление)
+    "seasons": {
+      ".read": true,
+      // Менять параметры сезона может только Админ
+      ".write": "root.child('roles').child(auth.uid).val() === 'admin'"
+    },
+
+    "global_news": {
+      ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).val() === 'admin'"
+    },
+    
+    // 8. ВАЙБ ЧЕК (Ежедневное настроение)
+    "dailyVibe": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth.uid === $uid",
+        ".validate": "newData.hasChildren(['date', 'val'])",
+        "date": { ".validate": "newData.isString()" },
+        "val": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5" }
+      }
+    },
+
+    "chat_messages": {
+      ".read": "auth != null",
+      ".indexOn": ["timestamp"],
+      "$msgId": {
+        ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid || root.child('roles').child(auth.uid).val() === 'admin')",
+        ".validate": "newData.hasChildren(['uid', 'text', 'timestamp'])",
+        "uid": { ".validate": "newData.val() === auth.uid || root.child('roles').child(auth.uid).val() === 'admin'" },
+        "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 2000" },
+        "timestamp": { ".validate": true },
+        "isEdited": { ".validate": "newData.isBoolean()" }
+      }
+    }
+  }
+}

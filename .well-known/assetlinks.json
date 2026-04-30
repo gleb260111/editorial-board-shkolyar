@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.web.editorial_board_shkolyar.twa",
+      "sha256_cert_fingerprints": [
+        "1A:A6:EA:F3:03:72:D3:01:46:2F:A8:6E:1C:67:AA:C9:A1:E2:67:BE:7E:3C:F3:3F:2F:48:EA:59:24:2C:3A:E4"
+      ]
+    }
+  }
+]

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>404 — Страница прогуляла урок</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="/style.css"> 
+</head>
+<body class="not-found-page">
+    <div class="container" style="max-width: 600px;">
+        <div class="glitch-text">404</div>
+        <h2 id="reason-title" style="color: var(--accent-color); font-size: 1.5rem; margin-top: 0;">Страница прогуляла урок</h2>
+        <p id="reason-text" style="color: var(--secondary-text-color); margin-bottom: 2rem; font-size: 1.1rem;">Мы обыскали всю школу, но этого адреса не существует.</p>
+        <a href="/" class="btn">Вернуться на базу</a>
+    </div>
+    <script>
+        const phrases = [
+            { t: "Страница прогуляла урок", d: "Она сказала, что у неё болит живот, и ушла домой." },
+            { t: "Съела собака", d: "Ссылку на эту статью случайно сжевал чей-то пёс вместе с домашкой." },
+            { t: "Ошибка в ДНК", d: "Введенный адрес содержит опечатку или был удален цензурой." },
+            { t: "Ушла в буфет", d: "Страница стоит в очереди за пиццей. Подождите... или просто вернитесь назад." },
+            { t: "Списала не то", d: "Кажется, вы перешли по ссылке, которой не существует." }
+        ];
+        const random = phrases[Math.floor(Math.random() * phrases.length)];
+        document.getElementById('reason-title').textContent = random.t;
+        document.getElementById('reason-text').textContent = random.d;
+    </script>
+</body>
+</html>

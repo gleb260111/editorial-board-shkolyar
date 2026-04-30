@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Редколлегия Школяр 2121</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+    <!-- Подключение манифеста -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Цвет шапки в мобиле -->
+    <meta name="theme-color" content="#ff7a00">
+
+    <script>
+        // Регистрация Service Worker (нужно для установки приложения)
+        if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</head>
+<body class="dashboard-bg"></body>
+<body class="landing-page">
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>Редколлегия Школяр 2121</h1>
+            </div>
+
+            <!-- ИЗМЕНЕНИЕ: Кнопка Бургера теперь ССЫЛКА на menu.html -->
+            <!-- Мы добавили style, чтобы убрать подчеркивание ссылки и выровнять иконку -->
+            <a href="menu.html" class="burger-btn"></a>
+
+            <!-- ГЛАВНОЕ МЕНЮ (Остается видимым ТОЛЬКО НА ПК благодаря CSS) -->
+            <div id="auth-controls" class="nav-menu">
+
+                <!-- 1. Переключатель темы -->
+                <div class="theme-switch-wrapper">
+                    <label class="theme">
+                        <span class="theme__toggle-wrap">
+                            <input class="theme__toggle" type="checkbox" role="switch" name="theme" value="light">
+                        </span>
+                    </label>
+                </div>
+
+                <!-- 2. Кнопки навигации -->
+                <a href="auth.html?redirect=index.html" class="btn" id="login-btn">Войти</a>
+                <a href="dashboard.html" class="btn hidden" id="dashboard-btn">Кабинет</a>
+                <button class="btn btn-secondary hidden" id="logout-btn">Выйти</button>
+
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <!-- СЮДА ВСТАВЛЯЕМ БАННЕР НАСТРОЕНИЯ -->
+                <div id="vibe-banner-container"></div>
+                
+                <p>Ваша площадка для творчества, новостей и школьной жизни. <br>Присоединяйтесь к команде авторов!</p>
+                
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    <a href="auth.html?redirect=dashboard.html" class="btn cta-button">Начать работу</a>
+                    <a href="feed.html" class="btn btn-secondary cta-button">Читать Ленту</a>
+                </div>
+            </section>
+            <section class="idea-box">
+                <div class="idea-card-public">
+                    <h3>💡 Есть идея для статьи?</h3>
+                    <p>Закинь идею в наш Инкубатор. Редакторы увидят её в кабинете!</p>
+                    <div class="idea-input-group">
+                        <input type="text" id="public-idea-input" placeholder="О чем нам написать?">
+                        <button class="btn" id="public-idea-btn">Отправить</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="feature-card">
+                    <div class="icon-wrapper"><img src="notes.png" alt="Заметки" class="feature-icon"></div>
+                    <h3>Подавай статьи легко</h3>
+                    <p>Простой и понятный интерфейс для отправки ваших материалов в редакцию.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><img src="calendar.png" alt="Календарь" class="feature-icon"></div>
+                    <h3>Следи за сроками</h3>
+                    <p>Отслеживайте статус своих статей и узнавайте даты их публикации.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><img src="handshake.png" alt="Команда" class="feature-icon"></div>
+                    <h3>Стань частью команды</h3>
+                    <p>Присоединяйтесь к творческому сообществу школы и делитесь своими идеями.</p>
+                </div>
+            </section>
+
+            <!-- СЕКЦИЯ: СЛОВО РЕДАКТОРОВ -->
+            <section class="editors-quotes-section">
+                <h2 style="text-align: center; margin-bottom: 30px;">Слово Редакции</h2>
+                <div class="quotes-grid">
+        
+                    <!-- Карточка 1: Бывший Главред -->
+                    <div class="quote-card">
+                        <div class="quote-avatar">
+                            <img src="editor_1.jpg" alt="Ex-Editor 1" onerror="this.src='avatar1.png'">
+                        </div>
+                        <div class="quote-content">
+                            <blockquote>"Нет ничего преступнее, чем творчество без смысла и души. Всё самое настоящее рождается только от сердца к сердцу. Работая со словом, опасайтесь фикции!"</blockquote>
+                            <div class="quote-author">Потапова Мария</div>
+                        </div>
+                    </div>
+
+                    <!-- Карточка 2: Бывший Главред -->
+                    <div class="quote-card">
+                        <div class="quote-avatar">
+                            <img src="editor_2.jpg" alt="Ex-Editor 2" onerror="this.src='avatar2.png'">
+                        </div>
+                        <div class="quote-content">
+                            <blockquote>"Больше лучше, чем меньше"</blockquote>
+                            <div class="quote-author">Мудрецов Артём</div>
+                        </div>
+                    </div>
+
+                    <!-- Карточка 3: Текущий Главред -->
+                    <div class="quote-card current-editor">
+                        <div class="quote-avatar">
+                            <img src="editor_me.jpg" alt="Current Editor" onerror="this.src='avatar3.png'">
+                        </div>
+                        <div class="quote-content">
+                            <blockquote>"Мы придумываем другие вселенные не для того, чтобы сбежать от реальности. А для того, чтобы разобрать её на винтики и понять, как она работает"</blockquote>
+                            <div class="quote-author">Лунцев Глеб</div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="projects">
+                <h2>Творческая экосистема</h2>
+                <div class="projects-grid">
+                    <a href="https://we-hq-music.web.app" target="_blank" class="project-card">
+                        <div class="project-visual"><div class="music-bars"><span></span><span></span><span></span><span></span></div></div>
+                        <div class="project-info"><h3>WE.HQ Music</h3><p>Платформа с авторской музыкой<br>главного редактора</p></div>
+                    </a>
+                    <a href="https://editvisualizer.web.app" target="_blank" class="project-card">
+                        <div class="project-visual"><div class="visualizer-circle"></div></div>
+                        <div class="project-info"><h3>Edit Visualizer</h3><p>Визуализация звука с различными<br>режимами и эффектами</p></div>
+                    </a>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="social-links">
+                <a href="https://t.me/young_stories_HQ" target="_blank" class="social-link"><img src="tg.png" alt="Telegram"></a>
+                <a href="https://vk.com/young_stories" target="_blank" class="social-link"><img src="vk.png" alt="ВКонтакте"></a>
+            </div>
+            <p id="footer-copyright">&copy; 2025 Школяр 2121. Все права защищены.</p>
+        </footer>
+    </div>
+    
+    <div id="notification-container"></div>
+    <div class="loader-overlay" id="loader-overlay">
+        <div class="spinner"><div></div><div></div><div></div><div></div><div></div></div>
+    </div>
+
+    <script type="module">
+        import { auth, db, showNotification, onAuthStateChanged, signOut, ref, push, serverTimestamp, get } from './firebase-init.js';
+        
+        const loginBtn = document.getElementById('login-btn');
+        const dashboardBtn = document.getElementById('dashboard-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const loader = document.getElementById('loader-overlay');
+        
+        // Авторизация
+        loader.classList.add('visible');
+        onAuthStateChanged(auth, (user) => {
+            loader.classList.remove('visible');
+            if (user) {
+                if(loginBtn) loginBtn.classList.add('hidden');
+                if(dashboardBtn) dashboardBtn.classList.remove('hidden');
+                if(logoutBtn) logoutBtn.classList.remove('hidden');
+            } else {
+                if(loginBtn) loginBtn.classList.remove('hidden');
+                if(dashboardBtn) dashboardBtn.classList.add('hidden');
+                if(logoutBtn) logoutBtn.classList.add('hidden');
+            }
+        });
+
+        if(logoutBtn) logoutBtn.addEventListener('click', () => { signOut(auth).then(() => window.location.reload()); });
+
+        // Отправка идеи
+        const publicIdeaBtn = document.getElementById('public-idea-btn');
+        const publicIdeaInput = document.getElementById('public-idea-input');
+        if(publicIdeaBtn) {
+            publicIdeaBtn.addEventListener('click', async () => {
+                const text = publicIdeaInput.value.trim();
+                if(!text) { showNotification("Напишите хоть что-нибудь!", "error"); return; }
+                try {
+                    await push(ref(db, 'ideas'), {
+                        text: text,
+                        author: auth.currentUser ? "Пользователь (с главной)" : "Аноним",
+                        createdAt: serverTimestamp()
+                    });
+                    publicIdeaInput.value = '';
+                    showNotification("Идея отправлена в редакцию! 🚀");
+                } catch(e) { console.error(e); showNotification("Ошибка отправки", "error"); }
+            });
+        }
+
+        // --- ЛОГИКА НАСТРОЕНИЯ ---
+        const loadDailyVibe = async () => {
+            const todayKey = new Date().toISOString().split('T')[0];
+            const bannerContainer = document.getElementById('vibe-banner-container');
+            
+            try {
+                const snap = await get(ref(db, 'dailyVibe'));
+                if (snap.exists()) {
+                    const data = snap.val();
+                    const values = Object.values(data)
+                        .filter(v => v.date === todayKey)
+                        .map(v => v.val);
+                        
+                    if (values.length === 0) return;
+
+                    const sum = values.reduce((a, b) => a + b, 0);
+                    const avg = Math.round(sum / values.length);
+
+                    const vibes = {
+                        1: { icon: "🤬", text: "Бесит! (Атмосфера накалена)" },
+                        2: { icon: "😤", text: "Сложно (Все напряжены)" },
+                        3: { icon: "😐", text: "Норм (Рабочая обстановка)" },
+                        4: { icon: "🙂", text: "Хорошо (Позитивный вайб)" },
+                        5: { icon: "🤩", text: "Кайф! (Школа процветает)" }
+                    };
+
+                    const result = vibes[avg] || vibes[3];
+
+                    bannerContainer.innerHTML = `
+                        <div class="vibe-banner">
+                            <div class="vibe-icon">${result.icon}</div>
+                            <div>
+                                <div style="font-size:0.8rem; opacity:0.7;">Настроение редакции сегодня:</div>
+                                <div id="vibe-text">${result.text}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error("Ошибка загрузки вайба:", e);
+            }
+        };
+
+        // Запускаем сразу
+        loadDailyVibe();
+        // --- ПАСХАЛКИ НА ГЛАВНОЙ ---
+        
+        // 1. ХАКЕР
+        const ideaInput = document.getElementById('public-idea-input');
+        if (ideaInput) {
+            ideaInput.addEventListener('input', (e) => {
+                const val = e.target.value.toLowerCase();
+                if (['money', 'coins', 'деньги'].some(w => val.includes(w))) {
+                    triggerHackerEffect(e.target, "Мы не Центробанк! 💸");
+                }
+            });
+        }
+        function triggerHackerEffect(element, msg) {
+            element.style.borderColor = "red";
+            element.style.boxShadow = "0 0 10px red";
+            // Тряску можно добавить классом, если подключен CSS, но здесь упростим
+            element.classList.add('shake-error'); // Класс из style.css подцепится
+            showNotification(msg, 'error');
+            element.value = '';
+            setTimeout(() => {
+                element.style.borderColor = "";
+                element.style.boxShadow = "";
+                element.classList.remove('shake-error');
+            }, 500);
+        }
+
+        // --- ПАСХАЛКА: КНОПКА САМОУНИЧТОЖЕНИЯ ---
+        const copyright = document.getElementById('footer-copyright');
+        if (copyright) {
+            let clicks = 0;
+            let timeout;
+            copyright.addEventListener('click', () => {
+                clicks++;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => { clicks = 0; }, 2000); // Сброс через 2 сек
+
+                if (clicks === 5) {
+                    clicks = 0;
+                    document.body.style.transition = 'background-color 1s';
+                    document.body.style.backgroundColor = '#330000'; // Краснеет
+                    setTimeout(() => showNotification('3...', 'error'), 500);
+                    setTimeout(() => showNotification('2...', 'error'), 1500);
+                    setTimeout(() => showNotification('1...', 'error'), 2500);
+                    setTimeout(() => {
+                        document.body.style.backgroundColor = '';
+                        showNotification('Шутка. Работай дальше.', 'success');
+                    }, 3500);
+                }
+            });
+        }
+        // --- ЛОГИКА МЕНЮ И БЛОКИРОВКИ СКРОЛЛА (ВСТАВИТЬ СЮДА) ---
+        const burgerBtn = document.querySelector('.burger-btn');
+        const navMenu = document.getElementById('auth-controls'); // На главной меню имеет этот ID
+
+        if (burgerBtn && navMenu) {
+            burgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navMenu.classList.toggle('active');
+            
+                // Если меню открыто - запрещаем скролл
+                if (navMenu.classList.contains('active')) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Закрытие при клике по затемненному фону (мимо меню)
+            document.addEventListener('click', (e) => {
+                if (navMenu.classList.contains('active') && !navMenu.contains(e.target) && e.target !== burgerBtn) {
+                    navMenu.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

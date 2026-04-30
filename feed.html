@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лента - Школяр 2121</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <body class="dashboard-bg"></body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1 style="color: var(--accent-color);">Лента</h1>
+            </div>
+
+            <!-- НОВАЯ КНОПКА-ССЫЛКА -->
+            <a href="menu.html" class="burger-btn"></a>
+
+            <div class="nav-menu">
+                <div class="theme-switch-wrapper">
+                    <label class="theme">
+                        <span class="theme__toggle-wrap">
+                            <input class="theme__toggle" type="checkbox" role="switch" name="theme" value="light">
+                        </span>
+                    </label>
+                </div>
+                <a href="index.html" class="btn-link btn-secondary" style="margin: 0 10px;">На главную</a>
+                <a href="dashboard.html" class="btn" id="dashboard-btn">Кабинет</a>
+            </div>
+        </header>
+        
+        <main>
+            <!-- 2. БАННЕР НАСТРОЕНИЯ -->
+
+            <div class="feed-controls">
+                <button class="btn-toggle active" id="sort-new">🔥 Свежее</button>
+                <button class="btn-toggle" id="sort-top">❤️ Популярное</button>
+            </div>
+
+            <div id="feed-container">
+                <div class="loader-placeholder">Загрузка ленты...</div>
+            </div>
+        </main>
+    </div>
+
+    <div id="notification-container"></div>
+    <script type="module" src="feed.js"></script>
+    <!-- МОДАЛКА ДОСЬЕ -->
+    <div id="dossier-modal" class="hidden overlay-center">
+        <div class="modal-content" style="max-width: 400px;">
+            <div id="dossier-content">
+                <!-- JS заполнит это -->
+            </div>
+            <button class="btn btn-secondary" onclick="document.getElementById('dossier-modal').classList.add('hidden')" style="width:100%; margin-top:15px;">Закрыть</button>
+        </div>
+    </div>
+</body>
+</html>

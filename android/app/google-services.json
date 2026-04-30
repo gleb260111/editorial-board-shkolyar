@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "908928971705",
+    "firebase_url": "https://editorial-board-shkolyar-default-rtdb.firebaseio.com",
+    "project_id": "editorial-board-shkolyar",
+    "storage_bucket": "editorial-board-shkolyar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:908928971705:android:31a4f08fc663d0031a3c68",
+        "android_client_info": {
+          "package_name": "com.shkolyar2121.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6ZwT2DD1wM2AuVbgyW1GG8Qv3WQ7Eov4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
