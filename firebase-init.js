@@ -156,6 +156,7 @@ const SHOP_ITEMS_BASE = {
         { id: 'aura_flowers', name: 'Поляна', class: 'aura-flowers', price: 1500 },
         { id: 'aura_chains', name: 'Цепи Бездны', class: 'aura-chains', price: 2500 },
         { id: 'aura_laurel', name: 'Цезарь', class: 'aura-laurel', price: 5000 },
+        { id: 'aura_dog_poop', name: 'Собачий сюрприз', class: 'aura-dog-poop', price: 7000 },
         { id: 'aura_smileys', name: 'Хайп', class: 'aura-smileys', price: 8000 }
     ]
 };

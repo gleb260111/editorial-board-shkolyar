@@ -1977,7 +1977,8 @@ main {
 .aura-chains::before,
 .aura-flowers::before,
 .aura-laurel::before,
-.aura-smileys::before {
+.aura-smileys::before,
+.aura-dog-poop::before {
     content: '';
     position: absolute;
     width: 230%; 
@@ -1996,6 +1997,7 @@ main {
 .aura-flowers::before     { background-image: url('aura_flowers.png'); }
 .aura-laurel::before      { background-image: url('aura_laurel.png'); }
 .aura-smileys::before     { background-image: url('aura_smileys.png'); }
+.aura-dog-poop::before    { background-image: url('aura_dog_poop.png'); }
 @keyframes aura-global-spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
