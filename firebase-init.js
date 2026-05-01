@@ -133,30 +133,31 @@ const SHOP_ITEMS_BASE = {
         { id: 'ttl_new5', name: 'Титул: "Повелитель запятых"', value: 'Повелитель запятых', price: 1200 },
         { id: 'ttl_3', name: 'Титул: "Гений"', value: 'Гений мысли', price: 2000 },
         { id: 'ttl_4', name: 'Титул: "Босс"', value: 'Big Boss', price: 5000 },
+        { id: 'ttl_accountant', name: 'Титул: "Счетовод"', value: 'accountant', price: 7000 },
         { id: 'ttl_black1', name: 'Титул: "Сплю на уроках"', value: 'Сплю на уроках', price: 1500, isBlackMarket: true },
         { id: 'ttl_black2', name: 'Титул: "Торговец ответами"', value: 'Торговец ответами', price: 2000, isBlackMarket: true },
         { id: 'ttl_black3', name: 'Титул: "Призрак столовой"', value: 'Призрак столовой', price: 2500, isBlackMarket: true },
         { id: 'ttl_light_lord', name: 'Повелитель Света', value: 'Повелитель Света', price: 0, isHidden: true },
-        { id: 'ttl_dark_lord', name: 'Владыка Тьмы', value: 'Владыка Тьмы', price: 0, isHidden: true },
-        { id: 'ttl_accountant', name: 'Титул: "Счетовод"', value: 'accountant', price: 7000 },
+        { id: 'ttl_dark_lord', name: 'Владыка Тьмы', value: 'Владыка Тьмы', price: 0, isHidden: true }
     ],
     borders: [
         { id: 'brd_gold', name: 'Золотая рамка', class: 'border-gold', price: 500 },
         { id: 'brd_neon', name: 'Неон', class: 'border-neon', price: 1500 },
         { id: 'brd_fire', name: 'Огонь', class: 'border-fire', price: 3000 },
         { id: 'brd_void', name: 'Мистика', class: 'border-void', price: 4000 },
+        { id: 'brd_stars', name: 'Звёздное небо', class: 'border-stars', price: 4000 },
         { id: 'brd_perimeter', name: 'Периметр (Evo)', class: 'border-perimeter', price: 4500 },
         { id: 'brd_hydro', name: 'Гидросфера', class: 'border-hydro', price: 4500 },
         { id: 'brd_glitch', name: 'Глитч', class: 'border-glitch', price: 5000 },
         { id: 'frame_event_horizon', name: 'Сингулярность', class: 'frame-event-horizon', price: 0, isHidden: true },
     ],
     auras: [
-        { id: 'aura_shadow_seal', name: 'Печать Тени', class: 'aura-shadow-seal', price: 0, isHidden: true},
-        { id: 'aura_chains', name: 'Цепи Бездны', class: 'aura-chains', price: 2500 },
+        { id: 'aura_shadow_seal', name: 'Печать Тени', class: 'aura-shadow-seal', price: 0, isHidden: true },
         { id: 'aura_flowers', name: 'Поляна', class: 'aura-flowers', price: 1500 },
+        { id: 'aura_chains', name: 'Цепи Бездны', class: 'aura-chains', price: 2500 },
         { id: 'aura_laurel', name: 'Цезарь', class: 'aura-laurel', price: 5000 },
-        { id: 'aura_smileys', name: 'Хайп', class: 'aura-smileys', price: 2000 }
-    ],
+        { id: 'aura_smileys', name: 'Хайп', class: 'aura-smileys', price: 8000 }
+    ]
 };
 const escapeHTML = (str) => {
     if (!str) return '';
@@ -170,9 +171,14 @@ const escapeHTML = (str) => {
 document.addEventListener('DOMContentLoaded', () => {
     const header = document.querySelector('header');
     let lastScrollY = window.scrollY;
-    if (header) {
-        window.addEventListener('scroll', () => {
-            const currentScrollY = window.scrollY;
+    
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        
+        // Передаем значение скролла в CSS (для параллакса и инерции рамок)
+        document.documentElement.style.setProperty('--scroll-y', `${currentScrollY}px`);
+        
+        if (header) {
             if (currentScrollY < 50) {
                 header.classList.remove('header-hidden');
             } 
@@ -182,9 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
             else {
                 header.classList.remove('header-hidden');
             }
-            lastScrollY = currentScrollY;
-        }, { passive: true }); 
-    }
+        }
+        lastScrollY = currentScrollY;
+    }, { passive: true }); 
 });
 let connectionTimeout;
 let isFirstConnectAttempt = true;

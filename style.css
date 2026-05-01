@@ -996,6 +996,44 @@ footer { border-top: 1px solid var(--border-color); padding: 2rem 0; text-align:
     50% { box-shadow: 0 0 25px rgba(157, 0, 255, 0.9); border-color: #d48aff; }
     100% { box-shadow: 0 0 10px rgba(157, 0, 255, 0.5); border-color: #9d00ff; }
 }
+.border-stars {
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background-color: #0b0c10 !important;
+    border-radius: 12px !important;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.8);
+    background-image: 
+        radial-gradient(1px 1px at 20px 30px, #ffffff, transparent),
+        radial-gradient(1px 1px at 40px 70px, #ffffff, transparent),
+        radial-gradient(1px 1px at 90px 40px, #ffffff, transparent),
+        radial-gradient(1.5px 1.5px at 160px 120px, #ffffff, transparent),
+        
+        radial-gradient(2px 2px at 50px 160px, rgba(200,200,255,0.9), transparent),
+        radial-gradient(2px 2px at 130px 10px, rgba(200,200,255,0.8), transparent),
+        radial-gradient(2.5px 2.5px at 180px 90px, #b388ff, transparent),
+        
+        radial-gradient(3px 3px at 40px 40px, rgba(255,255,255,1), transparent),
+        radial-gradient(3px 3px at 250px 150px, rgba(0, 255, 255, 0.9), transparent);
+    background-size: 
+        200px 200px, 200px 200px, 200px 200px, 200px 200px,
+        300px 300px, 300px 300px, 300px 300px,
+        400px 400px, 400px 400px;
+    background-position: 
+        calc(var(--scroll-y, 0px) * 0.05) calc(var(--scroll-y, 0px) * 0.05),
+        calc(var(--scroll-y, 0px) * 0.05) calc(var(--scroll-y, 0px) * 0.05),
+        calc(var(--scroll-y, 0px) * 0.05) calc(var(--scroll-y, 0px) * 0.05),
+        calc(var(--scroll-y, 0px) * 0.05) calc(var(--scroll-y, 0px) * 0.05),
+        
+        calc(var(--scroll-y, 0px) * -0.1) calc(var(--scroll-y, 0px) * 0.15),
+        calc(var(--scroll-y, 0px) * -0.1) calc(var(--scroll-y, 0px) * 0.15),
+        calc(var(--scroll-y, 0px) * -0.1) calc(var(--scroll-y, 0px) * 0.15),
+        
+        calc(var(--scroll-y, 0px) * 0.2) calc(var(--scroll-y, 0px) * -0.25),
+        calc(var(--scroll-y, 0px) * 0.2) calc(var(--scroll-y, 0px) * -0.25);
+    transition: background-position 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
 .feed-author-area {
     display: flex;
     align-items: center;
