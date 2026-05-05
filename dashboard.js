@@ -1344,6 +1344,15 @@ const createArticleCard = (article) => {
     }
     return card;
 };
+const toggleAchBtn = document.getElementById('toggle-achievements-btn');
+const achGrid = document.getElementById('achievements-grid');
+if (toggleAchBtn && achGrid) {
+    toggleAchBtn.addEventListener('click', () => {
+        achGrid.classList.toggle('collapsed-on-mobile');
+        toggleAchBtn.textContent = achGrid.classList.contains('collapsed-on-mobile') ? 'Развернуть' : 'Свернуть';
+    });
+}
+
 const incubatorSection = document.getElementById('incubator-section');
 const ideasList = document.getElementById('ideas-list');
 const toggleIncubatorBtn = document.getElementById('toggle-incubator');
@@ -1585,6 +1594,82 @@ const openUserManager = async (authorId, authorName) => {
             `;
             manageAchievementsList.appendChild(label);
         });
+
+        // Инвентарь
+        const invSnap = await get(ref(db, `users/${authorId}/inventory`));
+        const userInv = invSnap.val() ||[];
+        const invList = document.getElementById('manage-inventory-list');
+        invList.innerHTML = '';
+        
+        // Формируем правильный порядок предметов как в магазине
+        const orderedItems =[
+            ...SHOP_ITEMS_BASE.avatars,
+            ...SHOP_ITEMS_BASE.titles,
+            ...SHOP_ITEMS_BASE.borders,
+            ...SHOP_ITEMS_BASE.auras
+        ];
+        
+        // Добавляем сезонные предметы, которых нет в базовом списке
+        Object.values(ALL_SHOP_ITEMS).forEach(item => {
+            if (item.isSeasonal && !orderedItems.find(i => i.id === item.id)) {
+                orderedItems.push(item);
+            }
+        });
+
+        const isRaw = localStorage.getItem('pref_raw_cosmetics') === 'true';
+        if (isRaw) {
+            invList.className = 'checkbox-list';
+            orderedItems.forEach(item => {
+                const isChecked = userInv.includes(item.id) ? 'checked' : '';
+                invList.innerHTML += `
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="${item.id}" ${isChecked} class="admin-inv-cb">
+                        <span><strong style="color:var(--accent-color)">${item.id}</strong> - ${item.name}</span>
+                    </label>
+                `;
+            });
+        } else {
+            invList.className = 'admin-visual-inv-grid';
+            let html = '';
+            orderedItems.forEach(item => {
+                const isChecked = userInv.includes(item.id) ? 'checked' : '';
+                let visual = '';
+                
+                if (item.src) {
+                    visual = `<img src="${escapeHTML(item.src)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`;
+                } else if (item.value) {
+                    let specialClass = '';
+                    if (item.value === 'Повелитель Света') specialClass = 'special-light';
+                    else if (item.value === 'Владыка Тьмы') specialClass = 'special-dark';
+                    visual = `<span class="rank-tag title-tag ${specialClass}" style="font-size:0.5rem; padding:2px; max-width:100%; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHTML(item.name.replace('Титул: ','').replace('(СЕЗОН) ',''))}</span>`;
+                } else if (item.class && (item.class.startsWith('border') || item.class.startsWith('frame'))) {
+                    let pClass = item.class;
+                    if (pClass === 'border-hydro') pClass += ' hydro-liquid';
+                    if (pClass === 'border-perimeter') pClass += ' perimeter-tier-6';
+                    visual = `<div class="${pClass}" style="width:40px;height:40px;border-radius:50%;background:#222;"></div>`;
+                } else if (item.class && item.class.startsWith('aura')) {
+                    visual = `<div style="width:40px;height:40px;border-radius:50%;background:#222;position:relative;display:flex;align-items:center;justify-content:center;"><div style="position:absolute;width:200%;height:200%;background:url('${item.id}.png') center/contain no-repeat;animation:aura-global-spin 10s linear infinite;"></div></div>`;
+                } else {
+                    visual = `<span style="font-size:1.5rem;">🎁</span>`;
+                }
+
+                html += `
+                    <label class="admin-visual-inv-item ${isChecked ? 'selected' : ''}" title="${item.name}">
+                        <input type="checkbox" value="${item.id}" ${isChecked} class="admin-inv-cb">
+                        ${visual}
+                    </label>
+                `;
+            });
+            invList.innerHTML = html;
+            
+            invList.querySelectorAll('.admin-inv-cb').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    if (e.target.checked) e.target.parentElement.classList.add('selected');
+                    else e.target.parentElement.classList.remove('selected');
+                });
+            });
+        }
+
         userManagerModal.classList.remove('hidden');
     } catch (e) {
         console.error(e);
@@ -1601,19 +1686,28 @@ saveUserStatsBtn.addEventListener('click', async () => {
     checkboxes.forEach(cb => {
         if (cb.checked) achievementsObj[cb.value] = true;
     });
+    const invCheckboxes = document.querySelectorAll('.admin-inv-cb');
+    const newInv =[];
+    invCheckboxes.forEach(cb => {
+        if (cb.checked) newInv.push(cb.value);
+    });
     const dataToSave = {
         rank: newRank || null, 
         achievements: achievementsObj
     };
     showLoader();
     try {
-        await update(ref(db, `userStats/${uid}`), dataToSave);
+        const updates = {};
+        updates[`userStats/${uid}`] = dataToSave;
+        updates[`users/${uid}/inventory`] = newInv.length > 0 ? newInv : null;
+        await update(ref(db), updates);
         showNotification('Данные пользователя обновлены!');
         userManagerModal.classList.add('hidden');
         if (uid === auth.currentUser.uid) {
              await fetchArticles(); 
         }
     } catch (e) {
+        console.error(e);
         showNotification('Ошибка сохранения', 'error');
     } finally {
         hideLoader();
@@ -2271,6 +2365,14 @@ const initSidebar = async () => {
     }
 };
 const setupTogglesForAdmin = () => {
+    const rawCosmSw = document.getElementById('toggle-raw-cosmetics');
+    if (rawCosmSw) {
+        rawCosmSw.checked = localStorage.getItem('pref_raw_cosmetics') === 'true';
+        rawCosmSw.addEventListener('change', (e) => {
+            localStorage.setItem('pref_raw_cosmetics', e.target.checked);
+        });
+    }
+
     const setupVisibilityToggle = (switchId, mobSwitchId, sectionId, storageKey) => {
         const deskSw = document.getElementById(switchId);
         const mobSw = document.getElementById(mobSwitchId);

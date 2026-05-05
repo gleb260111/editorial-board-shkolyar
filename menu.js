@@ -37,6 +37,13 @@ async function initAdminFeatures(uid) {
         el.addEventListener('change', (e) => localStorage.setItem(key, e.target.checked));
     };
     setupToggle('mob-singularity', 'pref_show_singularity');
+    
+    const rawCosmSw = document.getElementById('mob-raw-cosmetics');
+    if (rawCosmSw) {
+        rawCosmSw.checked = localStorage.getItem('pref_raw_cosmetics') === 'true';
+        rawCosmSw.addEventListener('change', (e) => localStorage.setItem('pref_raw_cosmetics', e.target.checked));
+    }
+
     const equippedSnap = await get(ref(db, `users/${uid}/equipped`));
     const equipped = equippedSnap.val() || {};
     if (equipped.title === 'accountant') {

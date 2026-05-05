@@ -7,9 +7,9 @@
     <link rel="icon" type="image/png" href="./assets/logo-1co98nRr.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
-  <script type="module" crossorigin src="./assets/dashboard-mfN1Wz2d.js"></script>
-  <link rel="modulepreload" crossorigin href="./assets/firebase-init-BZinYjX3.js">
-  <link rel="stylesheet" crossorigin href="./assets/firebase-init-CbNRa8Tl.css">
+  <script type="module" crossorigin src="./assets/dashboard-CdpXcC5U.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/firebase-init-C9h7tdO5.js">
+  <link rel="stylesheet" crossorigin href="./assets/firebase-init-BhLtN42Y.css">
 </head>
 <body>
     <body class="dashboard-bg"></body>
@@ -128,10 +128,13 @@
                 </div>
 
                 <div class="achievements-wrapper">
-                    <h3>Достижения</h3>
-                    <div class="achievements-grid" id="achievements-grid"></div>
+                    <div class="achievements-header-mobile">
+                        <h3>Достижения</h3>
+                        <button id="toggle-achievements-btn" class="btn-link mobile-only-inline">Развернуть</button>
+                    </div>
+                    <div class="achievements-grid collapsed-on-mobile" id="achievements-grid"></div>
                 </div>
-            </section> <!-- <--- ЗАКРЫВАЕМ СЕКЦИЮ ПРОФИЛЯ ЗДЕСЬ! -->
+            </section>
 
             <!-- BATTLE PASS / СЕЗОН (Теперь это отдельный блок) -->
             <section id="season-section" class="season-container hidden">
@@ -307,6 +310,14 @@
                         </label>
                     </div>
 
+                    <div class="setting-row">
+                        <span>ID Косметики (Текст)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-raw-cosmetics">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
                     <!-- Глобальная новость -->
                     <div style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
                         <h4 class="sidebar-subtitle">Рассылка молнии</h4>
@@ -341,6 +352,13 @@
                 <label>Дополнительные ачивки (выдать принудительно)</label>
                 <div id="manage-achievements-list" class="checkbox-list">
                     <!-- Чекбоксы сгенерируются JS -->
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Инвентарь (Косметика)</label>
+                <div id="manage-inventory-list">
+                    <!-- Загрузится JS -->
                 </div>
             </div>
 
