@@ -239,8 +239,19 @@ const renderConsumablesSelector = async () => {
     container.classList.add('hidden');
     if (currentEditingId) return;
     if (!auth.currentUser) return;
-    const snap = await get(ref(db, `users/${auth.currentUser.uid}/inventory`));
-    const inventory = snap.val() || [];
+    
+    const[userSnap, adminSnap] = await Promise.all([
+        get(ref(db, `users/${auth.currentUser.uid}/inventory`)),
+        get(ref(db, `userStats/${auth.currentUser.uid}/inventory`))
+    ]);
+    
+    // Переписал безопасно, чтобы генератор не обрезал код
+    const userArr = userSnap.val() ? userSnap.val() : new Array();
+    const adminArr = adminSnap.val() ? adminSnap.val() : new Array();
+    const eff = new Set(userArr);
+    adminArr.forEach(id => eff.has(id) ? eff.delete(id) : eff.add(id));
+    const inventory = Array.from(eff);
+    
     const availableItems = SHOP_ITEMS_BASE.consumables.filter(i => inventory.includes(i.id));
     if (availableItems.length > 0) {
         container.classList.remove('hidden');
@@ -458,98 +469,95 @@ const startSecurityMonitor = () => {
     onValue(ref(db, `users/${uid}`), async (snapshot) => {
         if (auditRunning) return; 
         const data = snapshot.val() || {};
-        const inventory = data.inventory || [];
+        const inventory = data.inventory ? data.inventory : new Array();
         const equipped = data.equipped || {};
         const stats = data.stats || {};
-        const validSpent = stats.spentCoins || 0;
-        let safeShopItems = [];
-        if (SHOP_ITEMS_BASE) {
+        
+        // Вычисляем, сколько пользователь МОГ потратить легально
+        // (Всего заработано минус то, что осталось на балансе)
+        const totalEarned = stats.totalCoinsEarned || 0;
+        const currentBalance = stats.balance || 0;
+        const validSpent = Math.max(0, totalEarned - currentBalance);
+        
+        // Получаем админские модификаторы инвентаря (XOR)
+        const overrideSnap = await get(ref(db, `userStats/${uid}`));
+        const adminInv = overrideSnap.exists() && overrideSnap.val().inventory ? overrideSnap.val().inventory : new Array();
+
+        // Вычисляем Эффективный Инвентарь (то, что реально доступно юзеру)
+        const effSet = new Set(inventory);
+        adminInv.forEach(id => effSet.has(id) ? effSet.delete(id) : effSet.add(id));
+        const effectiveInventory = Array.from(effSet);
+
+        let safeShopItems = new Array();
+        if (typeof SHOP_ITEMS_BASE !== 'undefined') {
             if (SHOP_ITEMS_BASE.avatars) safeShopItems = safeShopItems.concat(SHOP_ITEMS_BASE.avatars);
             if (SHOP_ITEMS_BASE.titles) safeShopItems = safeShopItems.concat(SHOP_ITEMS_BASE.titles);
             if (SHOP_ITEMS_BASE.borders) safeShopItems = safeShopItems.concat(SHOP_ITEMS_BASE.borders);
             if (SHOP_ITEMS_BASE.consumables) safeShopItems = safeShopItems.concat(SHOP_ITEMS_BASE.consumables);
+            if (SHOP_ITEMS_BASE.auras) safeShopItems = safeShopItems.concat(SHOP_ITEMS_BASE.auras);
         }
         if (typeof ALL_SHOP_ITEMS !== 'undefined') {
             Object.values(ALL_SHOP_ITEMS).forEach(item => {
-                if (!safeShopItems.find(i => i.id === item.id)) {
-                    safeShopItems.push(item);
-                }
+                if (!safeShopItems.find(i => i.id === item.id)) safeShopItems.push(item);
             });
         }
-        safeShopItems.push({ 
-            id: 'frame_event_horizon', 
-            name: 'Событие Горизонта',
-            class: 'frame-event-horizon', 
-            price: 0 
-        });
+        safeShopItems.push({ id: 'frame_event_horizon', price: 0 });
+
         let realCost = 0;
         let cheatingDetected = false;
         const updates = {};
-        if (equipped.avatar) {
-            const item = safeShopItems.find(i => i.src === equipped.avatar);
-            if (!item) {
-                console.warn(`🚨 ПОЛИЦИЯ: Аватар "${equipped.avatar}" не найден в магазине!`);
-                updates[`users/${uid}/equipped/avatar`] = null;
-                cheatingDetected = true;
-            } else if (!inventory.includes(item.id)) {
-                console.warn(`🚨 ПОЛИЦИЯ: Аватар есть в магазине, но не куплен!`);
-                updates[`users/${uid}/equipped/avatar`] = null;
-                cheatingDetected = true;
+
+        // Проверяем экипировку по Эффективному Инвентарю (с учетом подарков и конфискаций)
+        const checkEquipped = (type, propName, itemProp) => {
+            if (equipped[type]) {
+                const item = safeShopItems.find(i => i[itemProp] === equipped[type]);
+                if (!item || !effectiveInventory.includes(item.id)) {
+                    console.warn(`🚨 ПОЛИЦИЯ: Нелегально надет ${type}!`);
+                    updates[`users/${uid}/equipped/${type}`] = null;
+                    cheatingDetected = true;
+                }
             }
-        }
-        if (equipped.title) {
-            const item = safeShopItems.find(i => i.value === equipped.title);
-            if (!item) {
-                console.warn(`🚨 ПОЛИЦИЯ: Титул "${equipped.title}" — самодельный!`);
-                updates[`users/${uid}/equipped/title`] = null;
-                cheatingDetected = true;
-            } else if (!inventory.includes(item.id)) {
-                console.warn(`🚨 ПОЛИЦИЯ: Титул не куплен!`);
-                updates[`users/${uid}/equipped/title`] = null;
-                cheatingDetected = true;
-            }
-        }
-        if (equipped.border) {
-            const item = safeShopItems.find(i => i.class === equipped.border);
-            if (equipped.border === 'frame_event_horizon') {
-            }
-            else if (!item) {
-                console.warn(`🚨 ПОЛИЦИЯ: Рамка "${equipped.border}" не существует!`);
-                updates[`users/${uid}/equipped/border`] = null;
-                cheatingDetected = true;
-            } else if (!inventory.includes(item.id)) {
-                console.warn(`🚨 ПОЛИЦИЯ: Рамка не куплена!`);
-                updates[`users/${uid}/equipped/border`] = null;
-                cheatingDetected = true;
-            }
-        }
+        };
+        checkEquipped('avatar', 'src', 'src');
+        checkEquipped('title', 'value', 'value');
+        checkEquipped('border', 'class', 'class');
+        checkEquipped('aura', 'class', 'class');
+
+        // Считаем реальную стоимость купленного инвентаря (папка users)
         inventory.forEach(itemId => {
             const item = safeShopItems.find(i => i.id === itemId);
-            if (!item && !itemId.startsWith('s') && itemId !== 'frame_event_horizon') {
+            if (item) {
+                realCost += (item.price || 0);
+            } else if (!item && !itemId.startsWith('s') && itemId !== 'frame_event_horizon') {
                 console.warn(`🚨 ПОЛИЦИЯ: Неизвестный предмет в инвентаре: ${itemId}`);
                 cheatingDetected = true;
             }
         });
         
+        // Если вещей больше, чем он мог купить = КРАЖА!
+        if (realCost > validSpent + 5) {
+            console.warn(`🚨 КРАЖА! Вещей на ${realCost}, а легально мог потратить только ${validSpent}`);
+            cheatingDetected = true;
+        }
+
         if (cheatingDetected) {
             auditRunning = true; 
             console.log("🧹 Очистка аккаунта...");
-            showNotification("Обнаружены некорректные данные. Исправляем...", "error");
+            showNotification("Обнаружены некорректные данные. Инвентарь конфискован.", "error");
+            
+            // Оставляем только бесплатные вещи (подарки админа живут в userStats, так что они в безопасности)
             const cleanInventory = inventory.filter(id => {
                  const i = safeShopItems.find(item => item.id === id);
                  return i && i.price === 0;
             });
             updates[`users/${uid}/inventory`] = cleanInventory;
-            if (Object.keys(updates).length > 0) {
-                try {
-                    await update(ref(db), updates);
-                } catch(e) {
-                    console.error("Не удалось очистить:", e);
-                } finally {
-                    setTimeout(() => { auditRunning = false; }, 2000);
-                }
-            } else {
-                auditRunning = false;
+            
+            try {
+                await update(ref(db), updates);
+            } catch(e) {
+                console.error("Не удалось очистить:", e);
+            } finally {
+                setTimeout(() => { auditRunning = false; }, 2000);
             }
         }
     });
@@ -623,12 +631,14 @@ const handleDelete = async (id) => {
             const rewards = calculateArticleRewards(article.text || '');
             const newXp = Math.max(0, (stats.xp || 0) - rewards.xp);
             const newBalance = Math.max(0, (stats.balance || 0) - rewards.coins);
+            const newTotalCoins = Math.max(0, (stats.totalCoinsEarned || 0) - rewards.coins);
             
             // Пересчитываем обязательную подпись
             const signature = (newXp * 7) + (newBalance * 3) + 2121;
 
             updates[`users/${article.authorId}/stats/xp`] = newXp;
             updates[`users/${article.authorId}/stats/balance`] = newBalance;
+            updates[`users/${article.authorId}/stats/totalCoinsEarned`] = newTotalCoins;
             updates[`users/${article.authorId}/stats/signature`] = signature;
         }
 
@@ -663,10 +673,12 @@ const handlePublishDateChange = async (id, dateString, card) => {
             const rewards = calculateArticleRewards(article.text || '');
             const newXp = (stats.xp || 0) + rewards.xp;
             const newBalance = (stats.balance || 0) + rewards.coins;
+            const newTotalCoins = (stats.totalCoinsEarned || 0) + rewards.coins;
             const signature = (newXp * 7) + (newBalance * 3) + 2121;
 
             updates[`users/${article.authorId}/stats/xp`] = newXp;
             updates[`users/${article.authorId}/stats/balance`] = newBalance;
+            updates[`users/${article.authorId}/stats/totalCoinsEarned`] = newTotalCoins;
             updates[`users/${article.authorId}/stats/signature`] = signature;
             updates[`users/${article.authorId}/stats/lastXpGain`] = publishTimestamp;
             
@@ -1597,7 +1609,13 @@ const openUserManager = async (authorId, authorName) => {
 
         // Инвентарь
         const invSnap = await get(ref(db, `users/${authorId}/inventory`));
+        const userStatsSnap = await get(ref(db, `userStats/${authorId}/inventory`));
         const userInv = invSnap.val() ||[];
+        const adminInv = userStatsSnap.val() ||[];
+        const eff = new Set(userInv);
+        adminInv.forEach(id => eff.has(id) ? eff.delete(id) : eff.add(id));
+        const combinedInv = Array.from(eff);
+
         const invList = document.getElementById('manage-inventory-list');
         invList.innerHTML = '';
         
@@ -1620,7 +1638,7 @@ const openUserManager = async (authorId, authorName) => {
         if (isRaw) {
             invList.className = 'checkbox-list';
             orderedItems.forEach(item => {
-                const isChecked = userInv.includes(item.id) ? 'checked' : '';
+                const isChecked = combinedInv.includes(item.id) ? 'checked' : '';
                 invList.innerHTML += `
                     <label class="checkbox-item">
                         <input type="checkbox" value="${item.id}" ${isChecked} class="admin-inv-cb">
@@ -1632,7 +1650,7 @@ const openUserManager = async (authorId, authorName) => {
             invList.className = 'admin-visual-inv-grid';
             let html = '';
             orderedItems.forEach(item => {
-                const isChecked = userInv.includes(item.id) ? 'checked' : '';
+                const isChecked = combinedInv.includes(item.id) ? 'checked' : '';
                 let visual = '';
                 
                 if (item.src) {
@@ -1691,15 +1709,29 @@ saveUserStatsBtn.addEventListener('click', async () => {
     invCheckboxes.forEach(cb => {
         if (cb.checked) newInv.push(cb.value);
     });
-    const dataToSave = {
-        rank: newRank || null, 
-        achievements: achievementsObj
-    };
+    
     showLoader();
     try {
+        const userSnap = await get(ref(db, `users/${uid}/inventory`));
+        const currentUserInv = userSnap.val() ||[];
+        
+        // Сравниваем купленный инвентарь с тем, что отметил админ, 
+        // и получаем список переключателей (XOR)
+        const adminSet = new Set(currentUserInv);
+        newInv.forEach(id => adminSet.has(id) ? adminSet.delete(id) : adminSet.add(id));
+        const nextAdminInv = Array.from(adminSet);
+
+        const dataToSave = {
+            rank: newRank || null, 
+            achievements: achievementsObj,
+            inventory: nextAdminInv.length > 0 ? nextAdminInv : null
+        };
+        
         const updates = {};
         updates[`userStats/${uid}`] = dataToSave;
-        updates[`users/${uid}/inventory`] = newInv.length > 0 ? newInv : null;
+        // Мы больше ВООБЩЕ не трогаем папку users/${uid}/inventory, 
+        // она остаётся чистой историей покупок пользователя!
+        
         await update(ref(db), updates);
         showNotification('Данные пользователя обновлены!');
         userManagerModal.classList.add('hidden');
@@ -2015,7 +2047,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userData = userSnap.val() || {};
                 const currentStats = userData.stats || {};
                 
-                const totalSpent = getInventoryTotalCost(userData.inventory ||[]);
+                const currentInv = userData.inventory ? userData.inventory : new Array();
+                const totalSpent = getInventoryTotalCost(currentInv);
                 const lastXp = currentStats.lastXpGain || 0;
                 const newBalance = Math.max(0, coins - totalSpent);
                 const signature = (xp * 7) + (newBalance * 3) + 2121;
@@ -2024,9 +2057,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     xp: xp,
                     balance: newBalance,
                     signature: signature,
-                    totalLikes: calculatedLikes, // Вот здесь мы записываем правильно подсчитанные лайки
+                    totalLikes: calculatedLikes,
                     lastXpGain: lastXp,
-                    lastUpdated: serverTimestamp()
+                    lastUpdated: serverTimestamp(),
+                    totalCoinsEarned: coins // Записываем точную сумму заработка для Анти-Чита
                 };
                 
                 await set(ref(db, `users/${targetUid}/stats`), finalData);

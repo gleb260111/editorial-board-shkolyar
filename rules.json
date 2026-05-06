@@ -119,6 +119,7 @@
     				".validate": "newData.isNumber() && (!data.exists() || root.child('roles').child(auth.uid).val() === 'admin' || (newData.val() >= data.val() - 3 && newData.val() <= data.val() + 3))"
   				},
   				"lastXpGain": { ".validate": "newData.isNumber()" },
+  				"totalCoinsEarned": { ".validate": "newData.isNumber() && (!data.exists() || root.child('roles').child(auth.uid).val() === 'admin')" },
   				"lastUpdated": { ".validate": true }
 				},
         

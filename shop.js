@@ -80,11 +80,19 @@ const loadUserData = async () => {
         const roleSnap = await get(ref(db, `roles/${currentUser.uid}`));
         isAdmin = roleSnap.exists() && roleSnap.val() === 'admin';
         const snap = await get(ref(db, `users/${currentUser.uid}`));
+        const statsSnap = await get(ref(db, `userStats/${currentUser.uid}`));
         const data = snap.val() || {};
+        const adminData = statsSnap.val() || {};
         const stats = data.stats || {};
         currentBalance = stats.balance || 0;
         currentXP = stats.xp || 0;
-        userInventory = data.inventory ||[];
+        
+        const normalInv = data.inventory ||[];
+        const adminInv = adminData.inventory ||[];
+        const eff = new Set(normalInv);
+        adminInv.forEach(id => eff.has(id) ? eff.delete(id) : eff.add(id));
+        userInventory = Array.from(eff);
+        
         userEquipped = data.equipped || {};
         const balanceDisplay = isAdmin ? '∞' : currentBalance;
         document.getElementById('user-balance').textContent = `🪙 ${balanceDisplay}`;
@@ -106,7 +114,7 @@ const renderConsumables = async () => {
     if (!container) {
         const bordersSection = document.getElementById('shop-borders').parentElement;
         const section = document.createElement('section');
-        section.innerHTML = '<h2>🕵️ Теневой Рынок (Расходники)</h2><div class="shop-grid" id="shop-consumables"></div>';
+        section.innerHTML = '<h2>🕵️ Теневой Рынок</h2><div class="shop-grid" id="shop-consumables"></div>';
         bordersSection.after(section);
         container = document.getElementById('shop-consumables');
     }
@@ -273,7 +281,11 @@ const buyItem = async (item) => {
     if (!confirm(`Купить "${item.name}" за ${item.price} монет?`)) return;
     showLoader();
     try {
-        const newInventory = [...userInventory, item.id];
+        // Достаем ТОЛЬКО купленный инвентарь (чтобы не перенести админские вещи в обычную папку)
+        const userSnap = await get(ref(db, `users/${currentUser.uid}/inventory`));
+        const currentNormalInv = userSnap.val() || [];
+        const newInventory = [...currentNormalInv, item.id];
+        
         const updates = {};
         updates[`users/${currentUser.uid}/inventory`] = newInventory;
         if (item.price > 0) {
