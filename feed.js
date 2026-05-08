@@ -247,9 +247,8 @@ const loadAuthorData = async (authorId, articleId, cardElement) => {
                 const smartClasses = getSmartBorderClasses(equipped.border, xp, displayRankTitle);
                 cardElement.classList.add(...smartClasses);
             }
-            if (equipped.aura && auraContainer) {
-                auraContainer.classList.add(equipped.aura);
-            }
+            if (equipped.aura && auraContainer) auraContainer.classList.add(equipped.aura);
+            if (equipped.aura_reverse && auraContainer) auraContainer.classList.add(equipped.aura_reverse);
         }
         let htmlContent = '';
         if (overrides.rank) {
@@ -388,6 +387,9 @@ window.openDossier = async (uid) => {
         }
         if (equipped.aura) {
             visualClasses += ' ' + equipped.aura;
+        }
+        if (equipped.aura_reverse) {
+            visualClasses += ' ' + equipped.aura_reverse;
         }
         let innerImg = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#333; border-radius:50%; font-size:2rem;">👤</div>`;
         if (equipped.avatar) {

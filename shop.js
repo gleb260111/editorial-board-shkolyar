@@ -110,11 +110,13 @@ const renderShop = () => {
     renderConsumables();
 };
 const renderConsumables = async () => {
+    if (!SHOP_ITEMS_BASE.consumables || SHOP_ITEMS_BASE.consumables.length === 0) return;
+    
     let container = document.getElementById('shop-consumables');
     if (!container) {
         const bordersSection = document.getElementById('shop-borders').parentElement;
         const section = document.createElement('section');
-        section.innerHTML = '<h2>🕵️ Теневой Рынок</h2><div class="shop-grid" id="shop-consumables"></div>';
+        section.innerHTML = '<h2>🕵️ Теневой Рынок (Расходники)</h2><div class="shop-grid" id="shop-consumables"></div>';
         bordersSection.after(section);
         container = document.getElementById('shop-consumables');
     }
@@ -239,26 +241,48 @@ const renderSection = (containerId, items, type) => {
             <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
             `;
         }
-        let isEquipped = false;
-        if (type === 'avatar' && userEquipped.avatar === item.src) isEquipped = true;
-        if (type === 'title' && userEquipped.title === item.value) isEquipped = true;
-        if (type === 'border' && userEquipped.border === item.class) isEquipped = true;
-        if (type === 'aura' && userEquipped.aura === item.class) isEquipped = true;
-        let btnHtml = '';
-        if (isEquipped) {
-            btnHtml = `<button class="btn btn-secondary unequip-btn" data-type="${type}">Снять</button>`;
-        } else if (isOwned) {
-            btnHtml = `<button class="btn equip-btn" data-type="${type}" data-id="${item.id}">Надеть</button>`;
-        } else if (canBuy) { 
-            const isFree = item.price === 0;
-            const canAfford = isFree || currentBalance >= item.price;
-            const disabled = canAfford ? '' : 'disabled';
-            let priceText = `${item.price}🪙`;
-            if (item.price === 0) priceText = 'Награда';
-            btnHtml = `<button class="btn buy-btn" ${disabled} data-price="${item.price}" data-id="${item.id}">Купить ${priceText}</button>`;
-        } else {
-            btnHtml = `<button class="btn btn-secondary" disabled>Эксклюзив</button>`;
+        let isEquippedMain = false;
+        let isEquippedRev = false;
+        if (type === 'avatar' && userEquipped.avatar === item.src) isEquippedMain = true;
+        if (type === 'title' && userEquipped.title === item.value) isEquippedMain = true;
+        if (type === 'border' && userEquipped.border === item.class) isEquippedMain = true;
+        if (type === 'aura') {
+            if (userEquipped.aura === item.class) isEquippedMain = true;
+            if (userEquipped.aura_reverse === item.class + '-rev') isEquippedRev = true;
         }
+
+        let btnHtml = '';
+        if (type === 'aura') {
+            let btnMain = isEquippedMain ? `<button class="btn btn-secondary unequip-btn" data-type="aura" data-slot="main" style="flex:1; padding:5px; font-size:0.8rem;">Снять (Л)</button>` : `<button class="btn equip-btn" data-type="aura" data-slot="main" data-id="${item.id}" style="flex:1; padding:5px; font-size:0.8rem;">Надеть (Л)</button>`;
+            let btnRev = isEquippedRev ? `<button class="btn btn-secondary unequip-btn" data-type="aura" data-slot="rev" style="flex:1; padding:5px; font-size:0.8rem;">Снять (П)</button>` : `<button class="btn equip-btn" data-type="aura" data-slot="rev" data-id="${item.id}" style="flex:1; padding:5px; font-size:0.8rem;">Надеть (П)</button>`;
+            
+            if (!isOwned && canBuy) {
+                const isFree = item.price === 0;
+                const canAfford = isFree || currentBalance >= item.price;
+                const disabled = canAfford ? '' : 'disabled';
+                let priceText = item.price === 0 ? 'Награда' : `${item.price}🪙`;
+                btnHtml = `<button class="btn buy-btn" ${disabled} data-price="${item.price}" data-id="${item.id}" style="width:100%;">Купить ${priceText}</button>`;
+            } else if (!isOwned && !canBuy) {
+                btnHtml = `<button class="btn btn-secondary" disabled style="width:100%;">Эксклюзив</button>`;
+            } else {
+                btnHtml = `<div style="display:flex; gap:5px; width:100%; margin-top:10px;">${btnMain}${btnRev}</div>`;
+            }
+        } else {
+            if (isEquippedMain) {
+                btnHtml = `<button class="btn btn-secondary unequip-btn" data-type="${type}" data-slot="main">Снять</button>`;
+            } else if (isOwned) {
+                btnHtml = `<button class="btn equip-btn" data-type="${type}" data-slot="main" data-id="${item.id}">Надеть</button>`;
+            } else if (canBuy) { 
+                const isFree = item.price === 0;
+                const canAfford = isFree || currentBalance >= item.price;
+                const disabled = canAfford ? '' : 'disabled';
+                let priceText = item.price === 0 ? 'Награда' : `${item.price}🪙`;
+                btnHtml = `<button class="btn buy-btn" ${disabled} data-price="${item.price}" data-id="${item.id}">Купить ${priceText}</button>`;
+            } else {
+                btnHtml = `<button class="btn btn-secondary" disabled>Эксклюзив</button>`;
+            }
+        }
+
         card.innerHTML = `
             ${visual}
             <h3>${item.name}</h3>
@@ -266,10 +290,10 @@ const renderSection = (containerId, items, type) => {
         `;
         const buyBtn = card.querySelector('.buy-btn');
         if (buyBtn) buyBtn.addEventListener('click', () => buyItem(item));
-        const equipBtn = card.querySelector('.equip-btn');
-        if (equipBtn) equipBtn.addEventListener('click', () => equipItem(item, type));
-        const unequipBtn = card.querySelector('.unequip-btn');
-        if (unequipBtn) unequipBtn.addEventListener('click', () => unequipItem(type));
+        const equipBtns = card.querySelectorAll('.equip-btn');
+        equipBtns.forEach(btn => btn.addEventListener('click', (e) => equipItem(item, type, e.currentTarget.dataset.slot)));
+        const unequipBtns = card.querySelectorAll('.unequip-btn');
+        unequipBtns.forEach(btn => btn.addEventListener('click', (e) => unequipItem(type, e.currentTarget.dataset.slot)));
         container.appendChild(card);
     });
 };
@@ -304,14 +328,17 @@ const buyItem = async (item) => {
         hideLoader();
     }
 };
-const equipItem = async (item, type) => {
+const equipItem = async (item, type, slot = 'main') => {
     showLoader();
     try {
         const updates = {};
         if (type === 'avatar') updates[`users/${currentUser.uid}/equipped/avatar`] = item.src;
         if (type === 'title') updates[`users/${currentUser.uid}/equipped/title`] = item.value;
         if (type === 'border') updates[`users/${currentUser.uid}/equipped/border`] = item.class;
-        if (type === 'aura') updates[`users/${currentUser.uid}/equipped/aura`] = item.class;
+        if (type === 'aura') {
+            if (slot === 'main') updates[`users/${currentUser.uid}/equipped/aura`] = item.class;
+            else updates[`users/${currentUser.uid}/equipped/aura_reverse`] = item.class + '-rev';
+        }
         await update(ref(db), updates);
         showNotification('Успешно надето!');
         await loadUserData();
@@ -323,11 +350,15 @@ const equipItem = async (item, type) => {
         hideLoader();
     }
 };
-const unequipItem = async (type) => {
+const unequipItem = async (type, slot = 'main') => {
     showLoader();
     try {
         const updates = {};
-        updates[`users/${currentUser.uid}/equipped/${type}`] = null;
+        if (type === 'aura' && slot === 'rev') {
+            updates[`users/${currentUser.uid}/equipped/aura_reverse`] = null;
+        } else {
+            updates[`users/${currentUser.uid}/equipped/${type}`] = null;
+        }
         await update(ref(db), updates);
         showNotification('Успешно снято!');
         await loadUserData();

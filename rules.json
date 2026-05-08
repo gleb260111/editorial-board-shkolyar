@@ -160,6 +160,9 @@
             // ДОБАВЛЕНО: Аура тоже должна быть разрешена (иначе она не наденется)
             "aura": {
                 ".validate": "newData.isString() && newData.val().length < 50 || newData.val() == null"
+            },
+            "aura_reverse": {
+                ".validate": "newData.isString() && newData.val().length < 50 || newData.val() == null"
             }
         },
         

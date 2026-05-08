@@ -98,6 +98,17 @@ const ACHIEVEMENTS_CONFIG = [
     { id: 'public_favorite', icon: '❤️‍🔥', title: 'Любимец публики', desc: 'Собрать 50 лайков на всех своих статьях', check: (stats, arts, data) => (stats.totalLikes || 0) >= 50 },
     { id: 'company_soul', icon: '🥳', title: 'Душа компании', desc: 'Собрать 10 лайков на одной статье', check: (stats, arts, data) => arts.some(a => (a.likeCount || 0) >= 10) },
     { id: 'sensei', icon: '🥋', title: 'Сенсей', desc: 'Довести до публикации 3 статьи учеников', check: (stats, arts, data) => (stats.menteePublishedCount || 0) >= 3 },
+    { id: 'scrooge', icon: '🤑', title: 'Дядя Скрудж', desc: 'Накопить 10 000 монет на балансе', check: (stats, arts, data) => (stats.balance || 0) >= 10000 },
+    { id: 'stylist', icon: '✨', title: 'Икона стиля', desc: 'Собрать в инвентаре аватарку, рамку, титул и ауру', check: (stats, arts, data) => {
+        const inv = data.inventory ||[];
+        const hasAvatar = inv.some(id => SHOP_ITEMS_BASE.avatars?.some(i => i.id === id) || id.includes('_av_'));
+        const hasTitle = inv.some(id => SHOP_ITEMS_BASE.titles?.some(i => i.id === id) || id.includes('_ttl_'));
+        const hasBorder = inv.some(id => SHOP_ITEMS_BASE.borders?.some(i => i.id === id));
+        const hasAura = inv.some(id => SHOP_ITEMS_BASE.auras?.some(i => i.id === id));
+        return hasAvatar && hasTitle && hasBorder && hasAura;
+    }},
+    { id: 'photographer', icon: '📸', title: 'Папарацци', desc: 'Прикрепить к одной статье 3 или более фото', check: (stats, arts, data) => arts.some(a => a.images && a.images.length >= 3) },
+    { id: 'co_author', icon: '👥', title: 'Командный игрок', desc: 'Написать статью в соавторстве', check: (stats, arts, data) => arts.some(a => a.authorName && (a.authorName.includes(',') || a.authorName.toLowerCase().includes(' и '))) }
 ];
 let ALL_SHOP_ITEMS = {}; 
 let userRole = 'editor';
@@ -354,7 +365,8 @@ const calculateAndRenderStats = async (allArticles) => {
             avatarEl.classList.add(...smartClasses);
         }
         if (equipped.aura) auraContainer.classList.add(equipped.aura);
-        document.getElementById('stats-username').textContent = 
+        if (equipped.aura_reverse) auraContainer.classList.add(equipped.aura_reverse);
+        document.getElementById('stats-username').textContent =
             (userData.firstName ? `${userData.lastName} ${userData.firstName}` : currentUser.email.split('@')[0]);
         const elRank = document.getElementById('stats-rank');
         let titleText = equipped.title;
@@ -429,12 +441,28 @@ const calculateAndRenderStats = async (allArticles) => {
         const achievementsGrid = document.getElementById('achievements-grid');
         if (achievementsGrid && typeof ACHIEVEMENTS_CONFIG !== 'undefined') {
             achievementsGrid.innerHTML = '';
-            const unlockedList = [];
-            if (myArticles.length > 0) {
-                ACHIEVEMENTS_CONFIG.forEach(ach => { 
-                    if(ach.check(storedStats, myArticles, userData)) unlockedList.push(ach.id); 
-                });
-            }
+            
+            // Безопасное объединение инвентарей без сложных скобок
+            const normalInv = userData.inventory ? userData.inventory : new Array();
+            const adminInv = overrides.inventory ? overrides.inventory : new Array();
+            
+            // XOR объединение (чтобы конфискованные админом вещи не засчитывались в ачивках)
+            const effSet = new Set(normalInv);
+            adminInv.forEach(id => effSet.has(id) ? effSet.delete(id) : effSet.add(id));
+            
+            // Создаем копию даты для проверки, подкидывая туда актуальный инвентарь
+            const dataForChecks = Object.assign({}, userData);
+            dataForChecks.inventory = Array.from(effSet);
+
+            const unlockedList = new Array();
+            
+            // Проверяем ачивки В ЛЮБОМ СЛУЧАЕ (даже если 0 статей)
+            ACHIEVEMENTS_CONFIG.forEach(ach => { 
+                if(ach.check(storedStats, myArticles, dataForChecks)) {
+                    unlockedList.push(ach.id);
+                }
+            });
+            
             const forced = overrides.achievements || {};
             ACHIEVEMENTS_CONFIG.forEach(ach => {
                 const isUnlocked = unlockedList.includes(ach.id) || forced[ach.id];
@@ -522,6 +550,16 @@ const startSecurityMonitor = () => {
         checkEquipped('title', 'value', 'value');
         checkEquipped('border', 'class', 'class');
         checkEquipped('aura', 'class', 'class');
+        
+        if (equipped['aura_reverse']) {
+            const baseClass = equipped['aura_reverse'].replace('-rev', '');
+            const item = safeShopItems.find(i => i.class === baseClass);
+            if (!item || !effectiveInventory.includes(item.id)) {
+                console.warn(`🚨 ПОЛИЦИЯ: Нелегально надет aura_reverse!`);
+                updates[`users/${uid}/equipped/aura_reverse`] = null;
+                cheatingDetected = true;
+            }
+        }
 
         // Считаем реальную стоимость купленного инвентаря (папка users)
         inventory.forEach(itemId => {

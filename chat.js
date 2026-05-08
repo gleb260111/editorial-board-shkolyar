@@ -93,6 +93,7 @@ async function getUserProfile(uid) {
             avatar: equipped.avatar || null,
             border: equipped.border || null,
             aura: equipped.aura || null,
+            aura_reverse: equipped.aura_reverse || null,
             title: titleVal,
             titleClass: specialClass,
             xp: xp,
@@ -144,7 +145,7 @@ const buildMessageHTML = async (msgId, data) => {
             <div class="chat-msg-header" onclick="window.openDossier('${data.uid}')">
                 <div class="chat-user-info">
                     <div class="feed-avatar-placeholder" style="width:40px; height:40px; border:none; background:transparent;">
-                        <div class="aura-container ${profile.aura || ''}">
+                        <div class="aura-container ${profile.aura || ''} ${profile.aura_reverse || ''}">
                             ${avatarImg}
                         </div>
                     </div>
@@ -333,6 +334,9 @@ window.openDossier = async (uid) => {
         }
         if (equipped.aura) {
             visualClasses += ' ' + equipped.aura;
+        }
+        if (equipped.aura_reverse) {
+            visualClasses += ' ' + equipped.aura_reverse;
         }
         let innerImg = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#333; border-radius:50%; font-size:2rem;">👤</div>`;
         if (equipped.avatar) {

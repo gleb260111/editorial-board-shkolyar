@@ -424,12 +424,12 @@ footer { border-top: 1px solid var(--border-color); padding: 2rem 0; text-align:
 }
 .achievements-header-mobile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
 .achievements-wrapper h3 { font-size: 1rem; margin-bottom: 0; color: #ddd; }
-.mobile-only-inline { display: none; }
+.mobile-only-inline { display: none !important; }
 .achievements-grid {
     display: flex; gap: 10px; flex-wrap: wrap;
 }
 @media (max-width: 900px) {
-    .mobile-only-inline { display: inline-block; font-size: 0.85rem; color: var(--accent-color); }
+    .mobile-only-inline { display: inline-block !important; font-size: 0.85rem; color: var(--accent-color); }
     .collapsed-on-mobile { display: none !important; }
 }
 .achievement-item {
@@ -2059,6 +2059,38 @@ main {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.aura-shadow-seal-rev::after,
+.aura-chains-rev::after,
+.aura-flowers-rev::after,
+.aura-laurel-rev::after,
+.aura-smileys-rev::after,
+.aura-dog-poop-rev::after {
+    content: '';
+    position: absolute;
+    width: 290%; 
+    height: 290%;
+    top: -95%; 
+    left: -95%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+    z-index: 11; 
+    animation: aura-global-spin-rev 20s linear infinite;
+}
+.aura-shadow-seal-rev::after { background-image: url('aura_shadow_seal.png'); }
+.aura-chains-rev::after      { background-image: url('aura_chains.png'); }
+.aura-flowers-rev::after     { background-image: url('aura_flowers.png'); }
+.aura-laurel-rev::after      { background-image: url('aura_laurel.png'); }
+.aura-smileys-rev::after     { background-image: url('aura_smileys.png'); }
+.aura-dog-poop-rev::after    { background-image: url('aura_dog_poop.png'); }
+
+@keyframes aura-global-spin-rev {
+    0% { transform: scaleX(-1) rotate(0deg); }
+    100% { transform: scaleX(-1) rotate(360deg); }
+}
+
 .fab-btn {
     position: fixed;
     bottom: 30px;
