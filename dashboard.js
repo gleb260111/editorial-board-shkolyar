@@ -230,6 +230,7 @@ const closeModal = () => {
 const resetForm = () => {
     articleForm.reset();
     document.getElementById('articleId').value = '';
+    document.getElementById('videoLink').value = '';
     currentEditingId = null;
     imageInputsContainer.innerHTML = '';
     addImageInput(); 
@@ -289,6 +290,7 @@ const handleEdit = (article) => {
     document.getElementById('text').value = article.text;
     document.getElementById('authorName').value = article.authorName;
     document.getElementById('authorClass').value = article.authorClass;
+    document.getElementById('videoLink').value = article.videoUrl || '';
     imageInputsContainer.innerHTML = '';
     if (article.images && Array.isArray(article.images) && article.images.length > 0) {
         article.images.forEach(url => addImageInput(url));
@@ -612,6 +614,7 @@ const handleFormSubmit = async (e) => {
         const url = input.value.trim();
         if (url) imagesArray.push(url);
     });
+    const videoUrl = document.getElementById('videoLink').value.trim();
     if (!title || !text || !authorName || !authorClass) {
         showNotification('Заполните все поля!', 'error');
         return;
@@ -622,7 +625,8 @@ const handleFormSubmit = async (e) => {
         authorName, 
         authorClass,
         images: imagesArray,
-        image: null
+        image: null,
+        videoUrl: videoUrl || null
     };
     showLoader();
     try {
@@ -1339,29 +1343,58 @@ const createArticleCard = (article) => {
         `;
     }
     let imagesListHtml = '';
+    let inlineImagesHtml = '';
+    let directImagesCount = 0;
     let photos = [];
     if (article.images && Array.isArray(article.images)) {
         photos = article.images;
     } else if (article.image) {
         photos = [article.image];
     }
-    if (photos.length > 0) {
+    
+    // Функция проверки, является ли ссылка прямым изображением
+    const isDirectImage = (u) => /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(u);
+
+    if (photos.length > 0 || article.videoUrl) {
         imagesListHtml = `<div class="article-images-list">`;
         photos.forEach((url, index) => {
             const safeUrl = url.replace(/["'<>]/g, '');
             if (safeUrl.toLowerCase().trim().startsWith('javascript:')) return;
-            imagesListHtml += `
-                <a href="${escapeHTML(safeUrl)}" target="_blank" class="article-image-link" title="Открыть фото">
-                    📷 Фото ${index + 1}
-                </a>
-            `;
+            
+            if (isDirectImage(safeUrl)) {
+                inlineImagesHtml += `<a href="${escapeHTML(safeUrl)}" target="_blank" class="collage-item"><img src="${escapeHTML(safeUrl)}" alt="Фото к статье"></a>`;
+                directImagesCount++;
+            } else {
+                imagesListHtml += `
+                    <a href="${escapeHTML(safeUrl)}" target="_blank" class="article-image-link" title="Открыть фото">
+                        📷 Фото ${index + 1}
+                    </a>
+                `;
+            }
         });
+        if (article.videoUrl) {
+            const safeVid = article.videoUrl.replace(/["'<>]/g, '');
+            if (!safeVid.toLowerCase().trim().startsWith('javascript:')) {
+                imagesListHtml += `
+                    <a href="${escapeHTML(safeVid)}" target="_blank" class="article-image-link" title="Смотреть видео">
+                        🎥 Видео
+                    </a>
+                `;
+            }
+        }
         imagesListHtml += `</div>`;
     }
+    
+    if (inlineImagesHtml) {
+        const collageClass = directImagesCount > 4 ? 'article-image-collage many' : 'article-image-collage';
+        inlineImagesHtml = `<div class="${collageClass}" data-count="${directImagesCount}">${inlineImagesHtml}</div>`;
+    }
+    
     card.innerHTML = `
         ${imagesListHtml} <!-- Ссылки вверху -->
         <h3>${escapeHTML(article.title)}</h3>
         <p class="article-text">${escapeHTML(article.text)}</p>
+        ${inlineImagesHtml} <!-- Картинки напрямую -->
         <div class="article-meta">
             <span>Автор: ${escapeHTML(article.authorName)}, ${escapeHTML(article.authorClass)}</span>
             <span>Подано: ${createdAt}</span>

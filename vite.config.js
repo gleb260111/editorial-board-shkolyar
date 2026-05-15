@@ -14,6 +14,7 @@ export default defineConfig({
         shop: resolve(__dirname, 'shop.html'),
         menu: resolve(__dirname, 'menu.html'),
         chat: resolve(__dirname, 'chat.html'),
+        article: resolve(__dirname, 'article.html'),
       }
     }
   }

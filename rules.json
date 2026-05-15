@@ -38,6 +38,7 @@
         // КАРТИНКИ (Поддержка и одиночной, и массива)
         "images": { ".validate": true }, 
         "image": { ".validate": true },
+        "videoUrl": { ".validate": "newData.isString() || newData.val() == null" },
         "createdAt": { ".validate": true },
 
         // === ЗАЩИТА АДМИНСКИХ ПОЛЕЙ ===

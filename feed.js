@@ -150,25 +150,52 @@ const renderFeed = () => {
         const heartIcon = isLiked ? '❤️' : '🤍';
         const likeClass = isLiked ? 'liked' : '';
         let imagesListHtml = '';
+        let inlineImagesHtml = '';
+        let directImagesCount = 0;
         let photos = [];
         if (article.images && Array.isArray(article.images)) {
             photos = article.images;
         } else if (article.image) {
             photos = [article.image];
         }
-        if (photos.length > 0) {
+        
+        const isDirectImage = (u) => /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(u);
+
+        if (photos.length > 0 || article.videoUrl) {
             imagesListHtml = `<div class="article-images-list">`;
             photos.forEach((url, index) => {
                 const safeUrl = url.replace(/["'<>]/g, '');
                 if (safeUrl.toLowerCase().trim().startsWith('javascript:')) return;
-                imagesListHtml += `
-                    <a href="${escapeHTML(safeUrl)}" target="_blank" class="article-image-link">
-                        📷 Фото ${index + 1}
-                    </a>
-                `;
+                
+                if (isDirectImage(safeUrl)) {
+                    inlineImagesHtml += `<a href="${escapeHTML(safeUrl)}" target="_blank" class="collage-item"><img src="${escapeHTML(safeUrl)}" alt="Фото к статье"></a>`;
+                    directImagesCount++;
+                } else {
+                    imagesListHtml += `
+                        <a href="${escapeHTML(safeUrl)}" target="_blank" class="article-image-link">
+                            📷 Фото ${index + 1}
+                        </a>
+                    `;
+                }
             });
+            if (article.videoUrl) {
+                const safeVid = article.videoUrl.replace(/["'<>]/g, '');
+                if (!safeVid.toLowerCase().trim().startsWith('javascript:')) {
+                    imagesListHtml += `
+                        <a href="${escapeHTML(safeVid)}" target="_blank" class="article-image-link">
+                            🎥 Видео
+                        </a>
+                    `;
+                }
+            }
             imagesListHtml += `</div>`;
         }
+        
+        if (inlineImagesHtml) {
+            const collageClass = directImagesCount > 4 ? 'article-image-collage many' : 'article-image-collage';
+            inlineImagesHtml = `<div class="${collageClass}" data-count="${directImagesCount}">${inlineImagesHtml}</div>`;
+        }
+        
         card.innerHTML = `
             <!-- БЛОК АВТОРА (КЛИКАБЕЛЬНЫЙ) -->
             <div class="feed-author-area clickable-author" onclick="window.openDossier('${article.authorId}')">
@@ -181,6 +208,7 @@ const renderFeed = () => {
             ${imagesListHtml} <!-- Ссылки перед заголовком -->
             <h3 style="margin-top: 10px;">${escapeHTML(article.title)}</h3>
             <p class="article-text">${parseMarkdown(article.text)}</p>
+            ${inlineImagesHtml} <!-- Картинки напрямую -->
             <div class="article-meta" style="margin-top: 15px; justify-content: space-between;">
                 <span>📅 Опубликовано: ${date}</span>
                 <div class="feed-actions" style="margin:0; border:none; padding:0;">
@@ -195,11 +223,12 @@ const renderFeed = () => {
             if(
                 e.target.closest('.btn-like') || 
                 e.target.closest('.article-image-link') || 
+                e.target.closest('.collage-item') || 
                 e.target.closest('.feed-author-area')
             ) {
                 return; 
             }
-            card.classList.toggle('expanded');
+            window.location.href = `article.html?id=${article.id}`;
         });
         const likeBtn = card.querySelector('.btn-like');
         likeBtn.addEventListener('click', (e) => {

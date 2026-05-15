@@ -691,6 +691,65 @@ footer { border-top: 1px solid var(--border-color); padding: 2rem 0; text-align:
     background: rgba(233, 30, 99, 0.1);
     color: #e91e63;
 }
+.btn-share {
+    background: var(--input-bg); border: 1px solid var(--border-color); color: var(--primary-text-color);
+    padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; gap: 5px; transition: 0.2s;
+}
+.btn-share:hover { transform: scale(1.1); border-color: var(--accent-color); color: var(--accent-color); }
+.article-image-collage {
+    display: grid;
+    gap: 4px;
+    margin-top: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+}
+.collage-item {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.collage-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+    background: var(--input-bg);
+}
+.collage-item:hover img {
+    transform: scale(1.05);
+}
+.article-image-collage[data-count="1"] { 
+    display: block; 
+    border: none; 
+    background: transparent; 
+    border-radius: 8px; 
+}
+.article-image-collage[data-count="1"] .collage-item img {
+    max-height: 500px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+.article-image-collage[data-count="2"] { grid-template-columns: 1fr 1fr; height: 250px; }
+.article-image-collage[data-count="3"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 350px; }
+.article-image-collage[data-count="3"] .collage-item:nth-child(1) { grid-row: 1 / 3; }
+.article-image-collage[data-count="4"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 350px; }
+.article-image-collage.many {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: 120px;
+    height: auto;
+}
+@media(max-width: 600px) {
+    .article-image-collage[data-count="2"] { height: 180px; }
+    .article-image-collage[data-count="3"] { height: 250px; }
+    .article-image-collage[data-count="4"] { height: 250px; }
+    .article-image-collage.many { grid-template-columns: 1fr 1fr; grid-auto-rows: 100px; }
+}
 .achievement-item.locked {
     opacity: 0.3;
     filter: grayscale(100%);
