@@ -205,7 +205,10 @@ const renderArticle = (article) => {
 
     const shareBtn = card.querySelector('#btn-share');
     shareBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(window.location.href).then(() => {
+        const shareUrl = (window.location.hostname === 'localhost' || window.location.protocol.startsWith('capacitor') || window.location.protocol.startsWith('file'))
+            ? `https://editorial-board-shkolyar.web.app/article.html?id=${article.id}`
+            : window.location.href;
+        navigator.clipboard.writeText(shareUrl).then(() => {
             showNotification('Ссылка скопирована!');
         }).catch(() => {
             showNotification('Не удалось скопировать ссылку', 'error');
